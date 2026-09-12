@@ -1,6 +1,10 @@
 source 'https://rubygems.org'
 ruby '~> 3.4.0'
 
+# To update do
+#   - on develop: bundler update --all
+#   - on production: bundler install
+
 gem 'rails'
 gem 'dotenv-rails'
 
