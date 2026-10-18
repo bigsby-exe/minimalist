@@ -16,11 +16,16 @@ test:
   pool: 5
   timeout: 5000
 
+# DATABASE_URL takes precedence over the individual production settings.
+# Railway's MYSQL_URL uses mysql://; Rails' adapter is named mysql2.
 production:
   adapter: mysql2
   encoding: utf8
-  database: minimalist
-  username: <%= ENV["MINIMALIST_DATABASE_USER"] %>
-  password: <%= ENV["MINIMALIST_DATABASE_PASSWORD"] %>
-  pool: 5
-  timeout: 5000
+  url: <%= ENV["DATABASE_URL"]&.sub(/\Amysql:\/\//, "mysql2://").to_json %>
+  host: <%= ENV.fetch("MINIMALIST_DATABASE_HOST", "127.0.0.1").to_json %>
+  port: <%= ENV.fetch("MINIMALIST_DATABASE_PORT", "3306").to_i %>
+  database: <%= ENV.fetch("MINIMALIST_DATABASE_NAME", "minimalist").to_json %>
+  username: <%= ENV["MINIMALIST_DATABASE_USER"].to_json %>
+  password: <%= ENV["MINIMALIST_DATABASE_PASSWORD"].to_json %>
+  pool: <%= ENV.fetch("RAILS_MAX_THREADS", "5").to_i %>
+  connect_timeout: 5

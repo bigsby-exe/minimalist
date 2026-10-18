@@ -9,6 +9,8 @@
 
 # dot env secrets
 .env
+.env.*
+!.env.example
 
 # Ignore the default SQLite database.
 /db/*.sqlite3

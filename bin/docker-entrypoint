@@ -1,0 +1,15 @@
+#!/bin/sh
+set -eu
+
+if [ "${RAILS_ENV:-production}" = "production" ]; then
+  : "${SECRET_KEY_BASE:?Set a persistent SECRET_KEY_BASE at runtime}"
+  if [ -n "${SECRET_KEY_BASE_DUMMY:-}" ]; then
+    echo "SECRET_KEY_BASE_DUMMY is only allowed during image builds" >&2
+    exit 1
+  fi
+fi
+
+# Containers may restart with an old pidfile. Database preparation is a separate
+# pre-deploy command so multiple web replicas never race to run migrations.
+rm -f /rails/tmp/pids/server.pid
+exec "$@"

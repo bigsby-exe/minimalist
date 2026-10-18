@@ -341,6 +341,7 @@ GEM
 PLATFORMS
   amd64-freebsd-14
   amd64-freebsd-15
+  ruby
 
 DEPENDENCIES
   active_model_serializers

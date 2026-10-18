@@ -1,4 +1,6 @@
 Lists::Application.routes.draw do
+  get "up", to: "rails/health#show", as: :rails_health_check
+
   # The priority is based upon order of creation: first created -> highest priority.
   # See how all your routes lay out with "rake routes".
   
