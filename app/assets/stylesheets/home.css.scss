@@ -46,6 +46,10 @@
 
   .actions {
     padding: 30px 0;
+
+    .oauth-sign-in {
+      display: inline;
+    }
     @media only screen and (min-width: $medium-breakpoint) {
       .preview { display: none; }
     }

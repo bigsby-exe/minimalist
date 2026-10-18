@@ -1,13 +1,14 @@
 class UserSerializer < ActiveModel::Serializer
-  attributes :id, :name, :email, :image_url, :is_owner
+  attributes :id, :name, :image_url, :is_owner
+  attribute :email, if: :include_email?
 
   def is_owner
-    list = options[:list]
+    list = instance_options[:list]
     object.owns_list?(list)
   end
 
   def include_email?
-    list = options[:list]
-    list.owned_by?(scope.current_user)
+    list = instance_options[:list]
+    list.present? && scope.present? && list.owned_by?(scope.current_user)
   end
 end

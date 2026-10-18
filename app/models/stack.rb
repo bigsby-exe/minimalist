@@ -14,6 +14,6 @@ class Stack < ActiveRecord::Base
   protected
 
     def generate_token
-      self.token = rand(36**10).to_s(36) if self.new_record? and self.token.nil?
+      self.token = SecureRandom.urlsafe_base64(32) if new_record? && token.nil?
     end
 end

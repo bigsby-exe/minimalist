@@ -1,7 +1,7 @@
 class ApplicationController < ActionController::Base
   # Prevent CSRF attacks by raising an exception.
   # For APIs, you may want to use :null_session instead.
-  protect_from_forgery with: :null_session# with: :exception
+  protect_from_forgery with: :exception
 
   # @see https://github.com/rails-api/active_model_serializers/issues/624
   serialization_scope :view_context

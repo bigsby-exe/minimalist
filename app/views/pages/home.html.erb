@@ -17,7 +17,7 @@
       <%= image_tag 'try-me.png', :class => 'try-me' %>
       <div class="actions">
         <%= link_to "Start a list", new_stack_url, :class => 'btn' %>
-        <%= link_to user_google_oauth2_omniauth_authorize_path, class: 'btn btn-primary' do %>
+        <%= button_to user_google_oauth2_omniauth_authorize_path, method: :post, authenticity_token: form_authenticity_token, form: { class: 'oauth-sign-in' }, class: 'btn btn-primary' do %>
           <svg class="icon-google-icon"><use xlink:href=<%= @prefix %>/assets/icons.svg#icon-google-icon'></use></svg>
           <span>Sign in with Google</span>
         <% end %>
