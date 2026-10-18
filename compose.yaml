@@ -1,0 +1,65 @@
+name: minimalist
+
+services:
+  db:
+    image: mysql:8.4
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-minimalist}
+      MYSQL_USER: ${MYSQL_USER:-minimalist}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?Set MYSQL_PASSWORD in .env}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Set MYSQL_ROOT_PASSWORD in .env}
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - >-
+          MYSQL_PWD="$$MYSQL_PASSWORD" mysql --protocol=TCP -h 127.0.0.1
+          -u"$$MYSQL_USER" "$$MYSQL_DATABASE" -e 'SELECT 1' >/dev/null
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  web:
+    image: ${MINIMALIST_IMAGE:-ghcr.io/bigsby-exe/minimalist:latest}
+    restart: unless-stopped
+    init: true
+    environment:
+      SECRET_KEY_BASE: ${SECRET_KEY_BASE:?Set SECRET_KEY_BASE in .env}
+      MINIMALIST_DATABASE_HOST: db
+      MINIMALIST_DATABASE_PORT: "3306"
+      MINIMALIST_DATABASE_NAME: ${MYSQL_DATABASE:-minimalist}
+      MINIMALIST_DATABASE_USER: ${MYSQL_USER:-minimalist}
+      MINIMALIST_DATABASE_PASSWORD: ${MYSQL_PASSWORD:?Set MYSQL_PASSWORD in .env}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      NEW_RELIC_AGENT_ENABLED: "false"
+      PORT: "3000"
+      RAILS_MAX_THREADS: ${RAILS_MAX_THREADS:-5}
+      RAILS_LOG_LEVEL: ${RAILS_LOG_LEVEL:-info}
+    ports:
+      - "127.0.0.1:${APP_PORT:-3000}:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "bundle", "exec", "ruby", "-rnet/http", "-e", "exit(Net::HTTP.get_response(URI('http://127.0.0.1:3000/up')).is_a?(Net::HTTPSuccess) ? 0 : 1)"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  mysql_data:

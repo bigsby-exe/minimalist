@@ -16,3 +16,6 @@ vendor/cache
 coverage
 test
 .DS_Store
+
+backups
+compose*.yaml

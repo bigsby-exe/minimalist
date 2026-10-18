@@ -1,94 +1,147 @@
-# Deploy with Docker and Railway
+# Docker deployment on Ubuntu
 
-The app runs as one Rails/Puma web service plus a separate MySQL database.
-This setup targets a new deployment with no existing users. Merge the security
-hardening changes first (already included on the base branch of this change).
+Run the Rails/Puma image with MySQL behind your existing HTTPS reverse proxy.
+This targets a fresh installation. No Railway account or configuration is used.
 
-## Railway
+## Image builds in GitHub Actions
 
-1. Create a Railway project and add its MySQL service. Keep the database on the
-   private network; the web app does not need a public database endpoint.
-2. Add this GitHub repository as a web service in the same project/environment.
-   Railway reads `railway.json`, builds `Dockerfile`, runs `db:prepare` as a
-   pre-deploy command, then starts Puma using the image's default command.
-3. Before the first successful deployment, set these web-service variables.
-   Replace `MySQL` in the reference if your database service has a different name.
+`.github/workflows/docker.yml` builds the Dockerfile on pull requests, pushes to
+`master`, version tags (`v*`), and manual workflow runs. PR builds do not publish.
+Successful builds of `master` and version tags publish to:
 
-| Variable | Value |
-| --- | --- |
-| `DATABASE_URL` | `${{MySQL.MYSQL_URL}}` (private connection URL) |
-| `SECRET_KEY_BASE` | Generate once with `openssl rand -hex 64`; store as a secret |
-| `GOOGLE_CLIENT_ID` | Your Google OAuth web client ID |
-| `GOOGLE_CLIENT_SECRET` | Your Google OAuth web client secret |
-| `NEW_RELIC_AGENT_ENABLED` | `false` unless you configure New Relic |
-
-The image sets production mode, stdout logging, and static asset serving.
-Railway supplies `PORT`; Puma reads it. Do not set `SECRET_KEY_BASE_DUMMY` at
-runtime. Keep `SECRET_KEY_BASE` stable: besides sessions, this app uses it to
-encode list IDs in URLs. Changing it invalidates existing list URLs.
-
-4. Generate a Railway domain or attach your custom domain. In the Google Cloud
-   OAuth client, register this exact authorized redirect URI:
-   `https://YOUR-DOMAIN/users/auth/google_oauth2/callback`.
-   Configure the consent screen and any permitted test users in Google Cloud.
-5. Deploy. The `/up` health endpoint must return 200 within 120 seconds. It checks
-   Rails boot, not database readiness. Database preparation must succeed before
-   the web service starts; a failure stops the deployment.
-6. Enable scheduled backups for the MySQL volume in Railway. Check the retention
-   policy and perform a restore exercise before relying on it for important data.
-
-The database is provisioned separately; `railway.json` configures only the web
-service and does not create a database, buy a plan, or configure backups.
-
-## Image build and local smoke check
-
-```sh
-docker build -t minimalist:local .
-cp .env.example .env.production
-# Fill in real secrets and a MySQL URL reachable from the container.
-# localhost in DATABASE_URL refers to the container, not your computer.
-docker run --rm --env-file .env.production minimalist:local bundle exec rails db:prepare
-docker run --rm --name minimalist -p 127.0.0.1:3000:3000 --env-file .env.production minimalist:local
+```text
+ghcr.io/bigsby-exe/minimalist:latest
+ghcr.io/bigsby-exe/minimalist:sha-FULL_COMMIT_SHA
+ghcr.io/bigsby-exe/minimalist:v1.0.0  # example, only when that tag is pushed
 ```
 
-From another terminal, `curl --fail http://127.0.0.1:3000/up` should succeed.
-The main application deliberately redirects HTTP to HTTPS. For full browser
-use, place it behind a TLS-terminating reverse proxy rather than disabling SSL.
-The proxy must overwrite untrusted forwarded headers and supply
-`X-Forwarded-Proto: https`. `/up` alone is exempt from the HTTPS redirect so
-internal health probes work; it returns no application data.
+`latest` tracks master. Set `MINIMALIST_IMAGE` to a `sha-...` tag or image digest
+for a fixed release. The workflow builds `linux/amd64` (standard Intel/AMD Ubuntu
+servers). ARM servers need a corresponding platform build before deployment.
+Actions are pinned to commit SHAs. Publication uses the repository's automatic
+`GITHUB_TOKEN` with package-write permission; no registry secret needs adding.
+Enable Actions if GitHub has disabled workflows for this fork, and approve the
+PR workflow if GitHub requests it. No workflow connects to your Ubuntu server.
 
-For a self-hosted deployment, run `db:prepare` once before starting/replacing web
-containers. Do not put migrations in every replica's startup command. Give the
-MySQL service a persistent volume and backups. Currently the application stores
-its lists/tasks in MySQL; it does not need a Redis service or a background worker.
-If file uploads are introduced later, configure durable object storage instead
-of relying on the web container's ephemeral `storage` directory.
+After the first publication, open the package settings in GitHub and choose its
+visibility. A public repository does not automatically make a new GHCR package
+public. For private images, authenticate on the server with `docker login ghcr.io`
+using your GitHub username and a token with `read:packages`. Keep that token out
+of this repository. Public packages can be pulled without login.
 
-## Build details
+## First deployment
 
-- Ruby 3.4.9 and Bundler 4.0.20 match the committed lockfile.
-- The lockfile's portable `ruby` platform and `BUNDLE_FORCE_RUBY_PLATFORM=true`
-  allow Linux builds from the already locked source gems, including native
-  extensions. Gem versions are not upgraded or resolved during the frozen build.
-- The build stage includes compiler/MySQL headers; the final image runs as a
-  non-root user without the compiler toolchain.
-- Node provides the ExecJS runtime for the existing CoffeeScript/Eco/Sass assets.
-- Assets are precompiled with Rails' build-only dummy secret. Real secrets and
-  local environment files are excluded from the image's build context.
-- `/up` reports whether Rails booted. Inspect the deploy logs for database errors,
-  then check list creation, sign-in, sharing, and drag-and-drop on the real domain.
+Install Docker Engine and the Docker Compose plugin on Ubuntu. Clone the repo
+(or copy `compose.yaml`, `.env.example` and `bin/deploy` into a deployment folder).
+Wait for the first successful master image build before deploying `latest`.
 
-## Validation status
+```sh
+cp .env.example .env
+chmod 600 .env
+openssl rand -hex 64  # use for SECRET_KEY_BASE
+openssl rand -hex 32  # use for MYSQL_PASSWORD
+openssl rand -hex 32  # use for MYSQL_ROOT_PASSWORD
+# Edit .env and paste those three separately generated values.
+./bin/deploy
+```
 
-The authoring environment had neither Docker nor Ruby, so the container build,
-Rails boot, gem installation, and database preparation have not been executed.
-Shell syntax, Railway configuration structure, and whitespace were checked.
-No tests were added or run, as requested. The first image build and staging boot
-are required before treating this deployment configuration as production-ready.
+Also fill in `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` if using Google login.
+Register this exact authorized redirect URI for your Google OAuth web client:
+`https://YOUR-DOMAIN/users/auth/google_oauth2/callback`.
+Configure the consent screen and permitted test users as needed.
 
-References:
-- https://docs.railway.com/guides/rails
-- https://docs.railway.com/config-as-code/reference
-- https://docs.railway.com/databases/mysql
-- https://docs.railway.com/volumes/backups
+Keep `SECRET_KEY_BASE` stable: it protects sessions and is also used to encode
+list IDs in URLs. Do not set `SECRET_KEY_BASE_DUMMY` at runtime. Database passwords
+initialize the MySQL volume on first boot; changing `.env` later does not change
+passwords inside an existing database.
+
+`bin/deploy` pulls the images, waits for MySQL health, stops an existing web
+container, runs `db:prepare` once, and starts the new web container. This creates
+the fresh schema or applies pending migrations. A failed migration stops the
+script and leaves the old app stopped, avoiding running against a partial schema.
+The deployment has a short maintenance window; it is not a zero-downtime rollout.
+
+## Connect your reverse proxy
+
+### Proxy running on the Ubuntu host
+
+The default Compose configuration publishes the application only on
+`127.0.0.1:3000`. Point your proxy upstream at `http://127.0.0.1:3000` (or change
+`APP_PORT` in `.env`). Keep TLS termination on the proxy. Preserve the public
+`Host` and overwrite untrusted forwarded headers, setting `X-Forwarded-Proto`
+to the original client protocol.
+
+For an existing Nginx HTTPS server block, the relevant location is:
+
+```nginx
+location / {
+    proxy_pass http://127.0.0.1:3000;
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+}
+```
+
+The main app enforces HTTPS. `/up` alone allows plain HTTP for container health
+checks and returns no application data. It checks Rails boot, not database health.
+
+### Proxy running in Docker
+
+A proxy container's `127.0.0.1` is not the Ubuntu host. With Compose 2.24.4 or newer,
+copy `compose.proxy.yaml` as well and add these to `.env`:
+
+```dotenv
+COMPOSE_FILE=compose.yaml:compose.proxy.yaml
+PROXY_NETWORK=your-existing-proxy-network
+```
+
+The override removes the host port and attaches only the web service to the
+existing external network. Configure your proxy upstream as
+`http://minimalist-web:3000`, with the same forwarded headers as above.
+MySQL stays on the application's default network and has no published port.
+Run `./bin/deploy` after selecting either proxy configuration.
+
+## Updates, logs and backups
+
+```sh
+# Set MINIMALIST_IMAGE in .env to the desired image/tag, then:
+./bin/deploy
+docker compose ps
+docker compose logs --tail=100 web
+curl --fail http://127.0.0.1:3000/up  # host-proxy setup only
+```
+
+Back up before updates that migrate the database. The named `mysql_data` volume
+survives container replacement and `docker compose down`. Do not use
+`docker compose down -v` unless intentionally deleting the database.
+
+Example logical backup (run from the deployment directory):
+
+```sh
+umask 077
+mkdir -p backups
+docker compose exec -T db sh -c 'MYSQL_PWD="$MYSQL_PASSWORD" exec mysqldump --single-transaction --no-tablespaces -u"$MYSQL_USER" "$MYSQL_DATABASE"' > "backups/minimalist-$(date +%F-%H%M%S).sql"
+```
+
+Schedule backups, retain copies off the server, and verify restores. Pinning an
+older application image does not undo a database migration: rollback may require
+a database restore. Containers restart automatically after reboots once Docker
+is enabled at boot. Log files have size limits in Compose.
+
+## Build details and verification
+
+The Dockerfile uses Ruby 3.4.9, Bundler 4.0.20, frozen source-gem dependencies and
+a non-root runtime. The portable `ruby` lockfile platform supports source builds
+on Linux. Node supplies ExecJS for the legacy assets. Build-only dummy secrets
+allow asset compilation; real secrets, `.env` files and local output are excluded
+from the Docker context. Never put deployment secrets in Docker build arguments.
+
+No application tests were added or run, as requested. Shell syntax and YAML
+parsing were checked locally. Docker and Ruby are unavailable in the authoring
+environment; GitHub Actions is the image-build gate. Verify the workflow is green
+and check database initialization, login, list creation/sharing and drag-and-drop
+on your server before relying on the deployment.
+
+The app currently stores lists/tasks in MySQL and needs no Redis or worker.
+If uploads are added later, configure durable storage rather than using the
+web container's ephemeral filesystem.

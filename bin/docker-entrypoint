@@ -10,6 +10,6 @@ if [ "${RAILS_ENV:-production}" = "production" ]; then
 fi
 
 # Containers may restart with an old pidfile. Database preparation is a separate
-# pre-deploy command so multiple web replicas never race to run migrations.
+# deployment step so multiple web replicas never race to run migrations.
 rm -f /rails/tmp/pids/server.pid
 exec "$@"

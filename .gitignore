@@ -30,3 +30,6 @@
 # Ignore cached gems
 vendor/cache/*
 vendor/bundle/*
+
+# Local database backups
+/backups/

@@ -1,0 +1,12 @@
+#!/bin/sh
+set -eu
+cd "$(dirname "$0")/.."
+
+# Pull before stopping the running app, so a registry failure causes no outage.
+docker compose pull
+docker compose up -d --wait --wait-timeout 300 db
+# Stop the old app before changing its schema. A failed migration intentionally
+# leaves it stopped; inspect logs and resolve the migration before retrying.
+docker compose stop web
+docker compose run --rm --no-deps web bundle exec rails db:prepare
+docker compose up -d --no-deps --wait --wait-timeout 180 web
