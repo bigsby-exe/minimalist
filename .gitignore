@@ -9,6 +9,8 @@
 
 # dot env secrets
 .env
+.env.*
+!.env.example
 
 # Ignore the default SQLite database.
 /db/*.sqlite3
@@ -28,3 +30,6 @@
 # Ignore cached gems
 vendor/cache/*
 vendor/bundle/*
+
+# Local database backups
+/backups/
