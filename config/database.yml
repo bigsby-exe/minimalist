@@ -1,6 +1,6 @@
 development:
   adapter: mysql2
-  encoding: utf8
+  encoding: utf8mb4
   database: minimalist_development
   username: <%= ENV["MINIMALIST_DATABASE_USER"] %>
   password: <%= ENV["MINIMALIST_DATABASE_PASSWORD"] %>
@@ -9,7 +9,7 @@ development:
 
 test:
   adapter: mysql2
-  encoding: utf8
+  encoding: utf8mb4
   database: minimalist_test
   username: <%= ENV["MINIMALIST_DATABASE_USER"] %>
   password: <%= ENV["MINIMALIST_DATABASE_PASSWORD"] %>
@@ -20,7 +20,7 @@ test:
 # Accept mysql:// connection URLs as well as the Rails mysql2:// scheme.
 production:
   adapter: mysql2
-  encoding: utf8
+  encoding: utf8mb4
   url: <%= ENV["DATABASE_URL"]&.sub(/\Amysql:\/\//, "mysql2://").to_json %>
   host: <%= ENV.fetch("MINIMALIST_DATABASE_HOST", "127.0.0.1").to_json %>
   port: <%= ENV.fetch("MINIMALIST_DATABASE_PORT", "3306").to_i %>

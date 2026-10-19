@@ -1,5 +1,22 @@
 class User < ActiveRecord::Base
-  has_and_belongs_to_many :lists, -> { uniq }
+  has_many :tasks, dependent: :destroy
+  has_many :tags, dependent: :destroy
+  validates :time_zone, inclusion: { in: TZInfo::Timezone.all_identifiers }, allow_nil: true
+  after_create :create_default_tags
+
+  def zone
+    ActiveSupport::TimeZone[time_zone || "Etc/UTC"]
+  end
+
+  def next_midnight
+    Time.current.in_time_zone(zone).tomorrow.beginning_of_day
+  end
+
+  def create_default_tags
+    [["Household", "🏠", "#dcecff"], ["Medical", "🩺", "#fbe0e6"], ["Work", "💼", "#e0efdd"]].each_with_index do |(name, emoji, color), index|
+      tags.create!(name: name, emoji: emoji, color: color, position: index)
+    end
+  end
   validates :email, format: /@/
 
   # Include default devise modules. Others available are:
@@ -44,23 +61,6 @@ class User < ActiveRecord::Base
 
     # Return the user
     user
-  end
-
-  def join_list(list)
-    if !list
-      return false
-    end
-
-    self.lists << list unless self.lists.include?(list)
-    return list
-  end
-
-  def leave_list(list)
-    self.lists.delete(list)
-  end
-
-  def owns_list?(list)
-    list && list.owned_by?(self)
   end
 
   private

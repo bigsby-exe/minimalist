@@ -1,0 +1,54 @@
+<section id="task-workspace" data-reset-at="<%= current_user.next_midnight.iso8601 %>" data-today="<%= @today.iso8601 %>" data-time-zone="<%= current_user.time_zone || 'Etc/UTC' %>">
+  <div class="page-heading"><div><p class="eyebrow">Your everyday, a little clearer</p><h1><%= @starred ? "Starred" : "All tasks" %></h1></div>
+    <span class="muted"><%= @today.strftime("%A, %-d %B") %></span>
+  </div>
+  <nav class="tabs" aria-label="Task views">
+    <%= link_to "All tasks", dashboard_path, class: @starred ? nil : "active", 'aria-current': @starred ? nil : 'page' %>
+    <%= link_to "★ Starred", dashboard_path(view: 'starred'), class: @starred ? "active" : nil, 'aria-current': @starred ? 'page' : nil %>
+  </nav>
+  <% if current_user.time_zone.nil? %>
+    <%= form_with model: current_user, url: profile_path, method: :patch, local: true, html: { id: "detect-timezone" } do |form| %>
+      <%= form.hidden_field :time_zone %>
+      <p>Set your timezone in <%= link_to 'Profile', profile_path %> for the midnight star reset.</p>
+    <% end %>
+  <% end %>
+  <% if @starred %><p class="muted">A little focus for today. Stars clear at midnight, tasks stay in All tasks.</p><% end %>
+  <% if @tags.any? %>
+    <%= form_with model: @task, local: true, html: { class: 'task-form add-task' } do |form| %>
+      <%= hidden_field_tag :view, params[:view] %>
+      <%= render 'fields', form: form, prefix: 'new-task' %>
+      <%= form.submit 'Add task', class: 'primary' %>
+    <% end %>
+  <% else %>
+    <p class="empty">Create a tag in your <%= link_to 'profile', profile_path %> to add your first task.</p>
+  <% end %>
+  <div id="task-groups">
+    <% @tags.each do |tag| %>
+      <% tasks = @tasks_by_tag[tag.id] || []; next if tasks.empty? %>
+      <section class="tag-section" aria-labelledby="tag-heading-<%= tag.id %>">
+        <h2 id="tag-heading-<%= tag.id %>"><%= tag.emoji %> <%= tag.name %> <span class="count"><%= tasks.size %></span></h2>
+        <ul class="task-list">
+          <% tasks.each do |task| %>
+            <li class="task-row" style="--tag-color: <%= tag.color %>" data-task-id="<%= task.id %>" data-starred-until="<%= task.starred_until&.iso8601 %>">
+              <div class="task-main">
+                <%= button_to star_task_path(task), method: :patch, params: { starred: !task.starred?, view: params[:view] }, class: 'star', 'aria-label': "#{task.starred? ? 'Unstar' : 'Star'} #{task.description}", 'aria-pressed': task.starred? do %><%= task.starred? ? '★' : '☆' %><% end %>
+                <div class="task-copy"><p><%= task.description %></p>
+                  <small><span class="urgency" data-due-date="<%= task.due_date %>"><%= task.urgency(@today) %></span> <%= tag.emoji %> <%= tag.name %> · <%= task.due_date ? task.due_date.strftime('%-d %b %Y') : 'No due date' %></small>
+                </div>
+                <%= button_to 'Bin', task_path(task), method: :delete, params: { view: params[:view] }, class: 'bin', form: { class: 'bin-form' }, 'aria-label': "Bin #{task.description}" %>
+              </div>
+              <details><summary>Edit task</summary>
+                <%= form_with model: task, local: true, html: { class: 'task-form' } do |form| %>
+                  <%= hidden_field_tag :view, params[:view] %>
+                  <%= render 'fields', form: form, prefix: "task-#{task.id}" %>
+                  <%= form.submit 'Save', class: 'primary' %>
+                <% end %>
+              </details>
+            </li>
+          <% end %>
+        </ul>
+      </section>
+    <% end %>
+    <% if @tasks_by_tag.empty? %><p class="empty"><%= @starred ? 'No starred tasks. Choose a star in All tasks to focus on it today.' : 'Nothing on your list yet. Add a task above.' %></p><% end %>
+  </div>
+</section>

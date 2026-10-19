@@ -1,0 +1,18 @@
+household:
+  user: one
+  name: Household
+  emoji: 🏠
+  color: "#dcecff"
+  position: 0
+work:
+  user: one
+  name: Work
+  emoji: 💼
+  color: "#e0efdd"
+  position: 1
+private:
+  user: two
+  name: Private
+  emoji: 🔒
+  color: "#e9e1fa"
+  position: 0

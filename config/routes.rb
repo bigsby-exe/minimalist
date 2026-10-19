@@ -1,45 +1,17 @@
 Lists::Application.routes.draw do
   get "up", to: "rails/health#show", as: :rails_health_check
-
-  # The priority is based upon order of creation: first created -> highest priority.
-  # See how all your routes lay out with "rake routes".
-  
-  # authentication callback
   devise_for :users, controllers: { omniauth_callbacks: "users/omniauth_callbacks" }
-
-  # Using Omniauth without other authentications
-  # @see https://github.com/plataformatec/devise/wiki/OmniAuth%3A-Overview#using-omniauth-without-other-authentications
   devise_scope :user do
-    get 'sign_in', to: 'devise/sessions#new', as: :new_user_session
-    delete 'sign_out', to: 'devise/sessions#destroy', as: :destroy_user_session
+    get "sign_in", to: "pages#home", as: :new_user_session
+    delete "sign_out", to: "devise/sessions#destroy", as: :destroy_user_session
   end
-
-  # stack routes for the old part of the app (anonymous)
-  resources :s, controller: :stacks, as: :stacks, only: [:index, :new, :show] do
-    resources :lists, except: [:edit] do
-      resources :tasks, except: [:new, :edit]
-    end
+  root "pages#home"
+  get "dashboard", to: "tasks#index"
+  resources :tasks, only: [:create, :update, :destroy] do
+    patch :star, on: :member
   end
-
-  # api routes
-  namespace :api do
-    resources :lists, only: [:index, :create, :show, :update, :destroy] do
-      member do
-        delete 'leave'
-      end
-
-      resources :contributors, only: [:index, :create]
-      delete 'contributors', to: 'contributors#destroy'
-
-      resources :tasks, only: [:index, :create, :show, :update, :destroy]
-    end
+  resource :profile, only: [:show, :update]
+  resources :tags, only: [:create, :update, :destroy] do
+    patch :reorder, on: :collection
   end
-
-  get 'preview' => 'pages#preview'
-  get 'dashboard' => 'pages#dashboard'
-  get 'dashboard/*all', to: 'pages#dashboard'
-
-  # You can have the root of your site routed with "root"
-  root 'pages#home'
-
 end

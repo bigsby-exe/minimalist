@@ -1,12 +1,10 @@
-require 'test_helper'
-require 'rails/performance_test_help'
+require "test_helper"
 
-class BrowsingTest < ActionDispatch::PerformanceTest
-  # Refer to the documentation for all available options
-  # self.profile_options = { :runs => 5, :metrics => [:wall_time, :memory]
-  #                          :output => 'tmp/performance', :formats => [:flat] }
-
-  def test_homepage
-    get '/'
+class BrowsingTest < ActionDispatch::IntegrationTest
+  test "landing page offers sign in for private tasks" do
+    get "/"
+    assert_response :success
+    assert_select "form[action='#{user_google_oauth2_omniauth_authorize_path}']"
+    assert_select "a[href='/s/new']", count: 0
   end
 end

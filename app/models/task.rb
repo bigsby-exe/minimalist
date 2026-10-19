@@ -1,19 +1,30 @@
 class Task < ActiveRecord::Base
-  
-  belongs_to :list, touch: true
-  validates :description, presence: true
-
-  scope :deleted, -> { where.not(deleted_at: nil) }
-  scope :remaining, -> { where completed: false }
-
-  after_create :update_count
-
-  def to_json(options = {})
-    super(options.merge(:only => [ :id, :list_id, :description, :completed, :sort_order ]))
+  belongs_to :user
+  belongs_to :tag
+  validates :description, presence: true, length: { maximum: 255 }
+  validate :tag_belongs_to_user
+  validate do
+    if due_date_before_type_cast.present? && due_date.nil?
+      errors.add(:due_date, "must be a valid calendar date")
+    end
   end
 
-  def update_count
-    Stat.increment_count_of(:tasks_count)
+  scope :in_date_order, -> { order(Arel.sql("due_date IS NULL"), :due_date, :created_at, :id) }
+  scope :starred, -> { where("starred_until > ?", Time.current) }
+
+  def starred?
+    starred_until.present? && starred_until > Time.current
   end
 
+  def urgency(today)
+    return "" unless due_date
+    return "‼️" if due_date < today
+    due_date == today ? "❗" : ""
+  end
+
+  private
+
+  def tag_belongs_to_user
+    errors.add(:tag, "must belong to you") unless tag && tag.user_id == user_id
+  end
 end

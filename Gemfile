@@ -6,6 +6,8 @@ ruby '~> 3.4.0'
 #   - on production: bundler install
 
 gem 'rails'
+# Rails 8.1 passes positional options to JSON.parse; JSON 3 only accepts keywords.
+gem 'json', '< 3'
 gem 'dotenv-rails'
 
 gem 'rack-cors', :require => 'rack/cors'
