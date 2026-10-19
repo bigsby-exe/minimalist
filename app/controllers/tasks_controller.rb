@@ -22,7 +22,9 @@ class TasksController < ApplicationController
     if task.update(task_params)
       redirect_to dashboard_path(view: params[:view])
     else
-      redirect_to dashboard_path(view: params[:view]), alert: task.errors.full_messages.to_sentence
+      load_dashboard
+      flash.now[:alert] = task.errors.full_messages.to_sentence
+      render :index, status: :unprocessable_entity
     end
   end
 
@@ -47,7 +49,7 @@ class TasksController < ApplicationController
     tasks = tasks.starred if @starred
     @tasks_by_tag = tasks.group_by(&:tag_id)
     @today = Time.current.in_time_zone(current_user.zone).to_date
-    @task = task || current_user.tasks.new(tag_id: session[:last_tag_id])
+    @task = task || current_user.tasks.new(tag_id: @tags.find { |tag| tag.id == session[:last_tag_id] }&.id || @tags.first&.id)
   end
 
   def task_params
