@@ -114,4 +114,23 @@ class TaskWorkspaceTest < ActionDispatch::IntegrationTest
     assert_equal "Europe/London", users(:one).reload.time_zone
   end
 
+  test "compact workspace has inline editing and an avatar menu" do
+    get dashboard_path
+    assert_select ".account-menu summary[aria-label='Account menu']"
+    assert_select ".account-menu a", text: "Profile"
+    assert_select ".site-header a", text: "Tasks", count: 0
+    assert_select ".add-task input[type=submit]", count: 0
+    assert_select ".task-row details summary", text: "Edit task", count: 0
+    assert_select ".task-row .inline-edit textarea", text: "Clean the kitchen"
+    assert_select ".task-row .task-date", count: 0
+    assert_select "#new-task-tag option[selected][value='#{tags(:household).id}']"
+  end
+
+  test "invalid inline edits return validation errors without changing the task" do
+    patch task_path(tasks(:one)), params: { task: { description: " " } }
+    assert_response :unprocessable_entity
+    assert_select ".flash.alert"
+    assert_equal "Clean the kitchen", tasks(:one).reload.description
+  end
+
 end

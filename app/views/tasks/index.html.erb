@@ -1,5 +1,5 @@
 <section id="task-workspace" data-reset-at="<%= current_user.next_midnight.iso8601 %>" data-today="<%= @today.iso8601 %>" data-time-zone="<%= current_user.time_zone || 'Etc/UTC' %>">
-  <div class="page-heading"><div><p class="eyebrow">Your everyday, a little clearer</p><h1><%= @starred ? "Starred" : "All tasks" %></h1></div>
+  <div class="page-heading"><div><h1><%= @starred ? "Starred" : "All tasks" %></h1></div>
     <span class="muted"><%= @today.strftime("%A, %-d %B") %></span>
   </div>
   <nav class="tabs" aria-label="Task views">
@@ -16,12 +16,14 @@
   <% if @tags.any? %>
     <%= form_with model: @task, local: true, html: { class: 'task-form add-task' } do |form| %>
       <%= hidden_field_tag :view, params[:view] %>
+      <%= form.text_field :description, required: true, maxlength: 255, placeholder: "What needs doing?", id: 'new-task-description', 'aria-label': 'New task', autocomplete: 'off', enterkeyhint: 'done' %>
+      <span class="composer-date muted"></span>
       <%= render 'fields', form: form, prefix: 'new-task' %>
-      <%= form.submit 'Add task', class: 'primary' %>
     <% end %>
   <% else %>
     <p class="empty">Create a tag in your <%= link_to 'profile', profile_path %> to add your first task.</p>
   <% end %>
+  <p id="task-status" role="status" aria-live="polite"></p>
   <div id="task-groups">
     <% @tags.each do |tag| %>
       <% tasks = @tasks_by_tag[tag.id] || []; next if tasks.empty? %>
@@ -30,20 +32,19 @@
         <ul class="task-list">
           <% tasks.each do |task| %>
             <li class="task-row" style="--tag-color: <%= tag.color %>" data-task-id="<%= task.id %>" data-starred-until="<%= task.starred_until&.iso8601 %>">
-              <div class="task-main">
-                <%= button_to star_task_path(task), method: :patch, params: { starred: !task.starred?, view: params[:view] }, class: 'star', 'aria-label': "#{task.starred? ? 'Unstar' : 'Star'} #{task.description}", 'aria-pressed': task.starred? do %><%= task.starred? ? '★' : '☆' %><% end %>
-                <div class="task-copy"><p><%= task.description %></p>
-                  <small><span class="urgency" data-due-date="<%= task.due_date %>"><%= task.urgency(@today) %></span> <%= tag.emoji %> <%= tag.name %> · <%= task.due_date ? task.due_date.strftime('%-d %b %Y') : 'No due date' %></small>
-                </div>
-                <%= button_to 'Bin', task_path(task), method: :delete, params: { view: params[:view] }, class: 'bin', form: { class: 'bin-form' }, 'aria-label': "Bin #{task.description}" %>
-              </div>
-              <details><summary>Edit task</summary>
-                <%= form_with model: task, local: true, html: { class: 'task-form' } do |form| %>
-                  <%= hidden_field_tag :view, params[:view] %>
-                  <%= render 'fields', form: form, prefix: "task-#{task.id}" %>
-                  <%= form.submit 'Save', class: 'primary' %>
-                <% end %>
-              </details>
+              <%= button_to star_task_path(task), method: :patch, params: { starred: !task.starred?, view: params[:view] }, class: 'star', form: { class: 'star-form' }, 'aria-label': "#{task.starred? ? 'Unstar' : 'Star'} #{task.description}", 'aria-pressed': task.starred? do %><%= task.starred? ? '★' : '☆' %><% end %>
+              <button type="button" class="task-name" title="<%= task.description %>"><%= task.description %></button>
+              <% if task.due_date %>
+                <button type="button" class="task-date" data-due-date="<%= task.due_date %>" title="<%= task.due_date.strftime('%-d %B %Y') %>"><span class="urgency"><%= task.urgency(@today) %></span> <span class="date-label"><%= task_date_label(task.due_date, @today) %></span></button>
+              <% end %>
+              <%= form_with model: task, local: true, html: { class: 'inline-edit', hidden: true } do |form| %>
+                <%= hidden_field_tag :view, params[:view] %>
+                <%= form.text_area :description, required: true, maxlength: 255, rows: 1, 'aria-label': 'Task name', enterkeyhint: 'done' %>
+                <%= render 'fields', form: form, prefix: "task-#{task.id}" %>
+              <% end %>
+              <%= button_to task_path(task), method: :delete, params: { view: params[:view] }, class: 'bin', form: { class: 'bin-form' }, 'aria-label': "Bin #{task.description}" do %>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7m4-7v7"/></svg>
+              <% end %>
             </li>
           <% end %>
         </ul>

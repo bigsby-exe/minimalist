@@ -10,11 +10,18 @@
 </head>
 <body>
   <header class="site-header">
-    <a class="brand" href="<%= user_signed_in? ? dashboard_path : root_path %>">minimalist<span>Make room for today.</span></a>
+    <a class="brand" href="<%= user_signed_in? ? dashboard_path : root_path %>">minimalist</a>
     <% if user_signed_in? %>
-      <nav aria-label="Account"><%= link_to "Tasks", dashboard_path %><%= link_to "Profile", profile_path %>
-        <%= button_to "Sign out", destroy_user_session_path, method: :delete %>
-      </nav>
+      <details class="account-menu">
+        <summary aria-label="Account menu">
+          <span class="avatar-fallback" aria-hidden="true"><%= (current_user.name.presence || current_user.email).first.upcase %></span>
+          <% if current_user.image_url.present? %><%= image_tag current_user.image_url, class: 'avatar', alt: '', referrerpolicy: 'no-referrer' %><% end %>
+        </summary>
+        <nav aria-label="Account">
+          <%= link_to "Profile", profile_path %>
+          <%= button_to "Sign out", destroy_user_session_path, method: :delete %>
+        </nav>
+      </details>
     <% end %>
   </header>
   <main>
