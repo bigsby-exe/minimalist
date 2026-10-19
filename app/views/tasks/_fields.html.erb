@@ -1,0 +1,10 @@
+<label class="task-description">Task
+  <%= form.text_field :description, required: true, maxlength: 255, placeholder: "What needs doing?", id: "#{prefix}-description" %>
+</label>
+<label>Tag
+  <%= form.select :tag_id, @tags.map { |tag| ["#{tag.emoji} #{tag.name}", tag.id] }, { include_blank: "Choose a tag" }, required: true, id: "#{prefix}-tag" %>
+</label>
+<label>Due date <span class="muted">optional</span>
+  <%= form.date_field :due_date, id: "#{prefix}-date" %>
+</label>
+<button type="button" class="clear-date" data-date-input="<%= prefix %>-date">Clear date</button>

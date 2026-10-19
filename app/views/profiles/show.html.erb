@@ -1,0 +1,37 @@
+<div class="page-heading"><div><p class="eyebrow">Make it yours</p><h1>Profile</h1></div><%= link_to 'Back to tasks', dashboard_path %></div>
+<section class="profile-section">
+  <h2>Your day</h2>
+  <p>Stars clear at midnight in this timezone, across all your devices.</p>
+  <%= form_with model: current_user, url: profile_path, local: true, html: { class: 'task-form', id: current_user.time_zone.nil? ? 'suggest-timezone' : nil } do |form| %>
+    <label>Timezone<%= form.select :time_zone, TZInfo::Timezone.all_identifiers, include_blank: 'Choose your timezone' %></label>
+    <%= form.submit 'Save timezone', class: 'primary' %>
+  <% end %>
+</section>
+<section class="profile-section">
+  <h2>Your tags</h2><p>Drag tags into the order you want to see them. You can also use the up and down buttons.</p>
+  <p id="reorder-status" role="status"></p>
+  <ol id="profile-tags" data-reorder-url="<%= reorder_tags_path %>">
+    <% @tags.each do |tag| %>
+      <li class="profile-tag" draggable="true" data-tag-id="<%= tag.id %>" style="--tag-color: <%= tag.color %>">
+        <div class="tag-order"><span aria-hidden="true">⠿</span><strong><%= tag.emoji %> <%= tag.name %></strong>
+          <button type="button" data-move="up" aria-label="Move <%= tag.name %> up">↑</button><button type="button" data-move="down" aria-label="Move <%= tag.name %> down">↓</button>
+        </div>
+        <%= form_with model: tag, local: true, html: { class: 'task-form' } do |form| %>
+          <%= render 'tag_fields', form: form %><%= form.submit 'Save tag' %>
+        <% end %>
+        <details><summary>Delete tag</summary>
+          <%= form_with url: tag_path(tag), method: :delete, local: true, html: { class: 'task-form' } do |form| %>
+            <% if tag.tasks.exists? %>
+              <label>Move its tasks to<%= select_tag :replacement_id, options_from_collection_for_select(@tags.reject { |other| other.id == tag.id }, :id, :name), prompt: 'Choose another tag', required: true %></label>
+            <% end %>
+            <%= form.submit 'Delete tag', class: 'danger' %>
+          <% end %>
+        </details>
+      </li>
+    <% end %>
+  </ol>
+  <h3>Add a tag</h3>
+  <%= form_with model: Tag.new(color: Tag::COLORS.values.first), local: true, html: { class: 'task-form' } do |form| %>
+    <%= render 'tag_fields', form: form %><%= form.submit 'Add tag', class: 'primary' %>
+  <% end %>
+</section>

@@ -1,44 +1,27 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <title>minimalist</title>
-  <meta name="description" content="A simple, sharable list app that's everywhere you are. Easy to share, great on any device.">
-  <meta name="author" content="@mshwery">
-  
-  <meta name="robots" content="<%= current_action?(:pages, :home) ? 'index' : 'noindex' %>, nofollow">
-
-  <%= stylesheet_link_tag    "application", :media => "all" %>
-  <%= javascript_tag 'window.listApp = {};' %>
-  <%= javascript_include_tag "application" %>
-  <link href='//fonts.googleapis.com/css?family=Open+Sans:300,400,600' rel='stylesheet' type='text/css'>
-  <meta name="viewport" content="width=device-width, user-scalable=0, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0" />
-  <link rel="shortcut icon" href="/favicon.png" />
-  <link rel="apple-touch-icon-precomposed" href="/apple-touch-icon-precomposed.png" />
-  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-  <link rel="apple-touch-startup-image" href="/iphone.png" media="screen and (max-device-width: 360px)"/>
+  <meta name="description" content="Your tasks, organised by tag. Star what matters today.">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <%= csrf_meta_tags %>
-
-  <script>
-    window.user = {
-      token:  '<%= user_signed_in? ? current_user.api_token : "" %>',
-      email:  '<%= user_signed_in? ? current_user.email : "" %>',
-      name:   '<%= user_signed_in? ? current_user.name : "" %>',
-      image:  '<%= user_signed_in? ? current_user.image_url : "" %>'
-    };
-  </script>
+  <%= stylesheet_link_tag "workspace", media: "all" %>
+  <%= javascript_include_tag "workspace", defer: true %>
 </head>
-<body class="<%= body_class.join(" ") %>">
-
-  <%#= render "layouts/notifications" %>
-
-  <div id="load-screen" class="dots show">
-    <div class="dot"></div>
-    <div class="dot"></div>
-    <div class="dot"></div>
-  </div>
-
-  <div id="app" class="hide">
+<body>
+  <header class="site-header">
+    <a class="brand" href="<%= user_signed_in? ? dashboard_path : root_path %>">minimalist<span>Make room for today.</span></a>
+    <% if user_signed_in? %>
+      <nav aria-label="Account"><%= link_to "Tasks", dashboard_path %><%= link_to "Profile", profile_path %>
+        <%= button_to "Sign out", destroy_user_session_path, method: :delete %>
+      </nav>
+    <% end %>
+  </header>
+  <main>
+    <% flash.each do |type, message| %>
+      <p class="flash <%= type %>" role="status"><%= message %></p>
+    <% end %>
     <%= yield %>
-  </div>
+  </main>
 </body>
 </html>

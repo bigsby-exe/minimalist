@@ -1,61 +1,56 @@
 class TasksController < ApplicationController
-  respond_to :json
+  before_action :authenticate_user!
 
-  before_action :find_stack
-  before_action :find_list
-  
   def index
-    tasks = @list.tasks
-    render json: tasks
+    load_dashboard
   end
-  
+
   def create
-    task = @list.tasks.new(task_params)
+    task = current_user.tasks.new(task_params)
     if task.save
-      render json: task, status: :created
+      session[:last_tag_id] = task.tag_id
+      redirect_to dashboard_path(view: params[:view]), notice: "Task added."
     else
-      render json: task.errors, status: :unprocessable_entity
+      load_dashboard(task)
+      flash.now[:alert] = task.errors.full_messages.to_sentence
+      render :index, status: :unprocessable_entity
     end
   end
 
-  def show
-    task = @list.tasks.find(params[:id])
-    render json: task
-  end
-  
   def update
-    task = @list.tasks.find(params[:id])
-
+    task = current_user.tasks.find(params[:id])
     if task.update(task_params)
-      render json: task
+      redirect_to dashboard_path(view: params[:view])
     else
-      render json: task.errors, status: :unprocessable_entity
+      redirect_to dashboard_path(view: params[:view]), alert: task.errors.full_messages.to_sentence
     end
+  end
+
+  def star
+    task = current_user.tasks.find(params[:id])
+    # An explicit desired state avoids toggling twice after a retry.
+    task.update!(starred_until: params[:starred] == "true" ? current_user.next_midnight : nil)
+    redirect_to dashboard_path(view: params[:view])
   end
 
   def destroy
-    task = @list.tasks.find(params[:id])
-    if task.destroy
-      head :no_content
-    else
-      render json: 'Permission denied'
-    end
+    current_user.tasks.find(params[:id]).destroy!
+    redirect_to dashboard_path(view: params[:view]), notice: "Task binned."
   end
-  
+
   private
 
+  def load_dashboard(task = nil)
+    @starred = params[:view] == "starred"
+    @tags = current_user.tags.in_profile_order
+    tasks = current_user.tasks.in_date_order
+    tasks = tasks.starred if @starred
+    @tasks_by_tag = tasks.group_by(&:tag_id)
+    @today = Time.current.in_time_zone(current_user.zone).to_date
+    @task = task || current_user.tasks.new(tag_id: session[:last_tag_id])
+  end
+
   def task_params
-    params.require(:task).permit(:description, :completed, :sort_order)
+    params.require(:task).permit(:description, :tag_id, :due_date)
   end
-
-  def find_list
-    @list ||= @stack.lists.find_by_token(params[:list_id])
-    record_not_found unless @list
-  end
-
-  def find_stack
-    @stack ||= Stack.find_by(token: params[:stack_id])
-    record_not_found unless @stack
-  end
-
 end

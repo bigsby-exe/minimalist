@@ -1,0 +1,3 @@
+<label>Name<%= form.text_field :name, required: true, maxlength: 50 %></label>
+<label>Emoji<%= form.text_field :emoji, required: true, maxlength: 16, class: 'emoji-input' %></label>
+<label>Colour<%= form.select :color, Tag::COLORS.to_a %></label>
