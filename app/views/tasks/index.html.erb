@@ -31,7 +31,7 @@
         <h2 id="tag-heading-<%= tag.id %>"><%= tag.emoji %> <%= tag.name %> <span class="count"><%= tasks.size %></span></h2>
         <ul class="task-list">
           <% tasks.each do |task| %>
-            <li class="task-row" style="--tag-color: <%= tag.color %>" data-task-id="<%= task.id %>" data-starred-until="<%= task.starred_until&.iso8601 %>">
+            <li id="task-<%= task.id %>" class="task-row" style="--tag-color: <%= tag.color %>" data-task-id="<%= task.id %>" data-starred-until="<%= task.starred_until&.iso8601 %>">
               <%= button_to star_task_path(task), method: :patch, params: { starred: !task.starred?, view: params[:view] }, class: 'star', form: { class: 'star-form' }, 'aria-label': "#{task.starred? ? 'Unstar' : 'Star'} #{task.description}", 'aria-pressed': task.starred? do %><%= task.starred? ? '★' : '☆' %><% end %>
               <button type="button" class="task-name" title="<%= task.description %>"><%= task.description %></button>
               <% if task.due_date %>

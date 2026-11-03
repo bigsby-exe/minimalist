@@ -11,6 +11,17 @@ Lists::Application.routes.draw do
     patch :star, on: :member
   end
   resource :profile, only: [:show, :update]
+  get "device/connect", to: "devices#connect", as: :connect_device
+  post "device/approve", to: "devices#approve", as: :approve_device
+  resources :devices, only: :destroy
+  namespace :mobile do
+    resource :authorization, only: [:create, :show]
+    resource :workspace, only: :show
+    resource :device, only: :destroy
+    resources :tasks, only: :create do
+      delete :star, on: :member, action: :unstar
+    end
+  end
   resources :tags, only: [:create, :update, :destroy] do
     patch :reorder, on: :collection
   end

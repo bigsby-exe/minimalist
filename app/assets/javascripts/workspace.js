@@ -215,6 +215,8 @@ document.addEventListener("DOMContentLoaded", function () {
     img.addEventListener("error", function () { img.hidden = true; });
   });
   var detected = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  var deviceTimeZone = document.getElementById("device-time-zone");
+  if (deviceTimeZone && detected) deviceTimeZone.value = detected;
   var detectForm = document.getElementById("detect-timezone");
   if (detectForm && detected) {
     detectForm.querySelector("input[name='user[time_zone]']").value = detected;

@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">Steps</string>
+    <string name="starred_description">Today’s starred tasks, grouped by tag.</string>
+    <string name="add_description">Quickly add a task with a tag and optional date.</string>
+    <string name="starred">★ Starred</string>
+    <string name="refresh">Refresh</string>
+    <string name="quick_add">＋ What needs doing?</string>
+    <string name="quick_add_detail">Add a task · tag · date</string>
+    <string name="empty">No starred tasks</string>
+    <string name="unstar">Remove star</string>
+</resources>

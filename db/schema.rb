@@ -10,7 +10,29 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_18_010000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_19_010000) do
+  create_table "android_devices", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "name", limit: 100, null: false
+    t.string "token_digest", limit: 64, null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["token_digest"], name: "index_android_devices_on_token_digest", unique: true
+    t.index ["user_id"], name: "index_android_devices_on_user_id"
+  end
+
+  create_table "device_authorizations", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.datetime "expires_at", null: false
+    t.string "name", limit: 100, null: false
+    t.string "token_digest", limit: 64, null: false
+    t.datetime "updated_at", null: false
+    t.string "user_code", limit: 12, null: false
+    t.index ["expires_at"], name: "index_device_authorizations_on_expires_at"
+    t.index ["token_digest"], name: "index_device_authorizations_on_token_digest", unique: true
+    t.index ["user_code"], name: "index_device_authorizations_on_user_code", unique: true
+  end
+
   create_table "identities", charset: "utf8mb3", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "provider"
@@ -37,6 +59,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_18_010000) do
     t.bigint "user_id", null: false
     t.index ["list_id", "user_id"], name: "index_lists_users_on_list_id_and_user_id", unique: true
     t.index ["user_id", "list_id"], name: "index_lists_users_on_user_id_and_list_id"
+  end
+
+  create_table "mobile_task_submissions", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "payload_digest", limit: 64, null: false
+    t.string "request_id", limit: 36, null: false
+    t.bigint "task_id", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["user_id", "request_id"], name: "index_mobile_task_submissions_on_user_id_and_request_id", unique: true
+    t.index ["user_id"], name: "index_mobile_task_submissions_on_user_id"
   end
 
   create_table "stacks", charset: "utf8mb3", force: :cascade do |t|
@@ -94,8 +127,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_18_010000) do
     t.index ["email"], name: "index_users_on_email"
   end
 
+  add_foreign_key "android_devices", "users"
   add_foreign_key "identities", "users"
   add_foreign_key "lists", "users", column: "owner_id"
+  add_foreign_key "mobile_task_submissions", "users"
   add_foreign_key "tags", "users"
   add_foreign_key "tasks", "tags"
   add_foreign_key "tasks", "users"

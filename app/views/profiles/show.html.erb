@@ -8,6 +8,17 @@
   <% end %>
 </section>
 <section class="profile-section">
+  <h2>Connected phones</h2>
+  <p>Disconnecting a phone stops its widget access. Signing out of this website leaves phones connected.</p>
+  <% current_user.android_devices.order(:created_at).each do |device| %>
+    <div class="task-form">
+      <span><%= device.name %> · connected <%= device.created_at.to_date %></span>
+      <%= button_to 'Disconnect', device_path(device), method: :delete, class: 'danger' %>
+    </div>
+  <% end %>
+  <% unless current_user.android_devices.exists? %><p class="muted">No phones connected.</p><% end %>
+</section>
+<section class="profile-section">
   <h2>Your tags</h2><p>Drag tags into the order you want to see them. You can also use the up and down buttons.</p>
   <p id="reorder-status" role="status"></p>
   <ol id="profile-tags" data-reorder-url="<%= reorder_tags_path %>">

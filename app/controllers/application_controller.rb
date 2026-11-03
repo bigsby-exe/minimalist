@@ -2,6 +2,7 @@ class ApplicationController < ActionController::Base
   # Prevent CSRF attacks by raising an exception.
   # For APIs, you may want to use :null_session instead.
   protect_from_forgery with: :exception
+  before_action :require_approved_account
 
   # @see https://github.com/rails-api/active_model_serializers/issues/624
   serialization_scope :view_context
@@ -21,7 +22,8 @@ class ApplicationController < ActionController::Base
   # Devise sign in path
   # @see https://github.com/plataformatec/devise/wiki/How-To%3A-Redirect-to-a-specific-page-on-successful-sign-in-and-sign-out
   def after_sign_in_path_for(resource)
-    dashboard_path
+    code = session.delete(:device_authorization_code)
+    code.present? ? connect_device_path(code: code) : dashboard_path
   end
   
   def redirect_current_user
@@ -31,6 +33,16 @@ class ApplicationController < ActionController::Base
   end
   
   protected
+
+    def require_approved_account
+      return unless current_user && !current_user.access_allowed?
+
+      sign_out current_user
+      respond_to do |format|
+        format.html { redirect_to new_user_session_path, alert: "This account is no longer approved for Steps." }
+        format.any { head :unauthorized }
+      end
+    end
 
     def record_not_found
       respond_to do |format|

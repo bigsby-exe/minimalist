@@ -45,7 +45,12 @@ openssl rand -hex 32  # use for MYSQL_ROOT_PASSWORD
 ./bin/deploy
 ```
 
-Also fill in `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` if using Google login.
+Before deploying, fill in `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` and
+`MINIMALIST_ALLOWED_EMAILS`. The allowlist is a comma-separated list of approved
+Google account emails, for example `you@example.com,friend@example.com`. Empty
+means no one can access the app. Google consent-screen test users are separate
+from this application allowlist. Recreate the web container with `bin/deploy`
+after changing the list; existing browser and phone requests also check it.
 Register this exact authorized redirect URI for your Google OAuth web client:
 `https://YOUR-DOMAIN/users/auth/google_oauth2/callback`.
 Configure the consent screen and permitted test users as needed.
@@ -136,12 +141,11 @@ on Linux. Node supplies ExecJS for the legacy assets. Build-only dummy secrets
 allow asset compilation; real secrets, `.env` files and local output are excluded
 from the Docker context. Never put deployment secrets in Docker build arguments.
 
-No application tests were added or run, as requested. Shell syntax and YAML
-parsing were checked locally. Docker and Ruby are unavailable in the authoring
-environment; GitHub Actions is the image-build gate. Verify the workflow is green
-and check database initialization, login, list creation/sharing and drag-and-drop
-on your server before relying on the deployment.
+Run the checks in [AGENTS.md](../AGENTS.md) before releasing. Verify the image
+workflow, database initialization, approved and unapproved Google sign-in, and
+task/tag editing on the deployed site. See [ANDROID.md](ANDROID.md) for the
+Cloudflare Access cutover and APK release steps.
 
-The app currently stores lists/tasks in MySQL and needs no Redis or worker.
+The app stores tasks and tags in MySQL and needs no Redis or worker.
 If uploads are added later, configure durable storage rather than using the
 web container's ephemeral filesystem.

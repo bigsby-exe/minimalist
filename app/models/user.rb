@@ -1,6 +1,8 @@
 class User < ActiveRecord::Base
   has_many :tasks, dependent: :destroy
   has_many :tags, dependent: :destroy
+  has_many :android_devices, dependent: :destroy
+  has_many :mobile_task_submissions, dependent: :destroy
   validates :time_zone, inclusion: { in: TZInfo::Timezone.all_identifiers }, allow_nil: true
   after_create :create_default_tags
 
@@ -24,13 +26,26 @@ class User < ActiveRecord::Base
 
   before_create :generate_api_token
 
+  def self.allowed_email?(email)
+    normalized = email.to_s.strip.downcase
+    normalized.present? && ENV.fetch("MINIMALIST_ALLOWED_EMAILS", "").split(",").map { |value| value.strip.downcase }.include?(normalized)
+  end
+
+  def access_allowed?
+    self.class.allowed_email?(email)
+  end
+
   # Grab a user by their identity or create a new one
   # @see http://sourcey.com/rails-4-omniauth-using-devise-with-twitter-facebook-and-linkedin/
   def self.from_omniauth(auth)
+    # The Google strategy exposes only verified addresses in info.email.
+    return unless auth.provider == "google_oauth2" && allowed_email?(auth.info.email)
+
     # Get the identity and user if they exist
     identity = Identity.find_for_oauth(auth)
 
     user = identity.user
+    return if user && !user.access_allowed?
 
     if user.nil?
       # Get the existing user by email if the provider gives us a verified email.

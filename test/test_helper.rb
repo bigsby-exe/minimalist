@@ -1,4 +1,5 @@
 ENV["RAILS_ENV"] = "test"
+ENV["MINIMALIST_ALLOWED_EMAILS"] = "first@example.com,second@example.com"
 require File.expand_path('../../config/environment', __FILE__)
 require 'rails/test_help'
 

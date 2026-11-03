@@ -14,6 +14,13 @@ Run `bundle exec rails db:prepare` and `bundle exec rails test` with a test MySQ
 
 The personal-task migration replaces the old task fields and assumes no existing user task data. Anonymous stack and shared-list routes are retired.
 
+## Android
+
+The `android/` project provides a private APK, a Starred home-screen widget, and a
+quick-add widget with tag/date controls. It uses the same account and tasks as the
+website. See [Android setup and builds](doc/ANDROID.md) for approved accounts,
+Google sign-in, signing keys, and the manual GitHub Actions APK build.
+
 ## Deployment
 
 See [Docker deployment on Ubuntu](doc/DEPLOYMENT.md) for the production image,

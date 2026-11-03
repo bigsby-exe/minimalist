@@ -1,0 +1,7 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:id="@+id/row" android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:paddingEnd="8dp">
+    <TextView android:id="@+id/star" android:layout_width="48dp" android:layout_height="48dp" android:gravity="center" android:text="★" android:textSize="24sp" android:textColor="#715720" android:contentDescription="@string/unstar" />
+    <LinearLayout android:id="@+id/task_link" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:minHeight="48dp" android:gravity="center_vertical" android:orientation="vertical">
+        <TextView android:id="@+id/name" android:layout_width="match_parent" android:layout_height="wrap_content" android:maxLines="1" android:ellipsize="end" android:textColor="#242424" android:textSize="14sp" />
+        <TextView android:id="@+id/date" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="#585858" android:textSize="11sp" />
+    </LinearLayout>
+</LinearLayout>

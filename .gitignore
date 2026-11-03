@@ -33,3 +33,11 @@ vendor/bundle/*
 
 # Local database backups
 /backups/
+
+# Android output and local signing credentials
+/android/.gradle/
+/android/**/build/
+/android/local.properties
+/android/.idea/
+*.jks
+*.keystore

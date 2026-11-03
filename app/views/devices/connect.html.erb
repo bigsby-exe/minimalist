@@ -1,0 +1,13 @@
+<div class="page-heading"><h1>Connect your phone</h1></div>
+<section class="profile-section">
+  <p>Connect <strong><%= @authorization.name %></strong> to <strong><%= current_user.email %></strong>?</p>
+  <p>Check that Steps on your phone displays this same code:</p>
+  <p><strong><%= @authorization.user_code %></strong></p>
+  <p>Only approve a connection you started yourself. This phone will be able to read starred tasks, add tasks, and remove stars. You can revoke access in Profile.</p>
+  <%= form_with url: approve_device_path, local: true do |form| %>
+    <%= hidden_field_tag :code, @authorization.user_code %>
+    <% if current_user.time_zone.nil? %><%= hidden_field_tag :time_zone, '', id: 'device-time-zone' %><% end %>
+    <%= form.submit 'Connect this phone', class: 'primary' %>
+  <% end %>
+  <%= link_to 'Cancel', dashboard_path %>
+</section>

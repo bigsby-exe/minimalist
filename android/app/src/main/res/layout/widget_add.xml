@@ -1,0 +1,4 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:id="@+id/add" android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:gravity="center_vertical" android:background="@drawable/widget_background">
+    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/quick_add" android:textColor="#25372E" android:textSize="17sp" />
+    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/quick_add_detail" android:textColor="#585858" android:textSize="11sp" />
+</LinearLayout>

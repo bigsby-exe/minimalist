@@ -25,6 +25,33 @@ Task and tag access is scoped through `current_user`. Keep ownership validation 
 
 Stars use `Task#starred?`, the `starred` scope, and `starred_until`, set from `User#next_midnight`. Expiration is computed when reading records rather than requiring a scheduled deletion job. The browser also updates open views at midnight without discarding unfinished input. Preserve both behaviors.
 
+## Android
+
+The Android app lives in `android/` and connects to `https://steps.ecorp.dev`. Read
+[doc/ANDROID.md](doc/ANDROID.md) for builds, signing, approved accounts, device pairing,
+and the mobile protocol. GitHub Actions builds signed APKs through a manual workflow.
+
+The web dashboard opens in a browser-backed tab. Native widgets use `/mobile` with
+separate per-device bearer credentials. No Cloudflare Access token is required.
+Google/browser cookies and legacy user API tokens do not authenticate the mobile API.
+Profile revokes device access. Website sign-out leaves widgets connected.
+
+`MINIMALIST_ALLOWED_EMAILS` is a comma-separated, case-insensitive allowlist of
+verified Google email addresses. Empty means no access. Enforce it before OAuth
+account creation and on existing browser sessions and mobile credentials. Keep
+phone pairing public but rate limited and require explicit approved-user consent.
+
+Quick-add retains dismissed/failed drafts, remembers tag and star choices, and requires
+a connection to submit. Preserve the exact pending payload and request ID across retries.
+Submission receipts survive task deletion to prevent retries recreating binned tasks.
+Widget refresh is best effort; filter cached star expiration on every render without
+touching drafts. Server expiration remains authoritative. All local account data is
+Keystore-encrypted and excluded from backups.
+
+Run `cd android && ./gradlew testDebugUnitTest lintDebug assembleDebug` for Android
+changes, plus `./gradlew connectedDebugAndroidTest` with a test emulator/device.
+Keep API changes covered by `test/integration/mobile_workspace_test.rb`.
+
 ## Verification and gotchas
 
 Use the Ruby version and dependencies declared in `.ruby-version`, `Gemfile`, and `Gemfile.lock`. MySQL is required. Configure an isolated test database through `config/database.yml` or a `mysql2://` `DATABASE_URL`, then run:
