@@ -69,17 +69,47 @@ public class DeviceStateTest {
             editor.setText("A draft that survives midnight");
             Widgets.update(context);
             assertEquals("A draft that survives midnight", editor.getText().toString());
-            activity.finish();
         });
-        instrumentation.waitForIdleSync();
+        assertEquals("offline-draft-test", Store.read(context).optString("token"));
+        finishAndWait(activity);
         assertEquals("A draft that survives midnight", Store.read(context).getJSONObject("draft").getString("description"));
         QuickAddActivity reopened = (QuickAddActivity) instrumentation.startActivitySync(
             new Intent(context, QuickAddActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
         instrumentation.runOnMainSync(() -> {
             assertEquals("A draft that survives midnight", findEditor(reopened.getWindow().getDecorView()).getText().toString());
-            reopened.finish();
         });
+        finishAndWait(reopened);
+    }
+
+    @Test public void externalSignoutLinkRequiresConfirmation() {
+        var instrumentation = InstrumentationRegistry.getInstrumentation();
+        Store.put(context, "token", "offline-confirmation-test");
+        MainActivity activity = (MainActivity) instrumentation.startActivitySync(
+            new Intent(Intent.ACTION_VIEW, android.net.Uri.parse("steps://phone/signout"), context, MainActivity.class)
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
         instrumentation.waitForIdleSync();
+        assertTrue(Store.connected(context));
+        var root = instrumentation.getUiAutomation().getRootInActiveWindow();
+        assertNotNull(root);
+        var cancel = root.findAccessibilityNodeInfosByText("Cancel");
+        assertFalse(cancel.isEmpty());
+        cancel.get(0).performAction(android.view.accessibility.AccessibilityNodeInfo.ACTION_CLICK);
+        instrumentation.waitForIdleSync();
+        assertTrue(Store.connected(context));
+        instrumentation.runOnMainSync(activity::finish);
+        instrumentation.waitForIdleSync();
+    }
+
+    private void finishAndWait(android.app.Activity activity) throws Exception {
+        var instrumentation = InstrumentationRegistry.getInstrumentation();
+        var destroyed = new java.util.concurrent.CountDownLatch(1);
+        androidx.test.runner.lifecycle.ActivityLifecycleCallback callback = (candidate, stage) -> {
+            if (candidate == activity && stage == androidx.test.runner.lifecycle.Stage.DESTROYED) destroyed.countDown();
+        };
+        var monitor = androidx.test.runner.lifecycle.ActivityLifecycleMonitorRegistry.getInstance();
+        instrumentation.runOnMainSync(() -> { monitor.addLifecycleCallback(callback); activity.finish(); });
+        try { assertTrue("Activity destruction timed out", destroyed.await(10, java.util.concurrent.TimeUnit.SECONDS)); }
+        finally { instrumentation.runOnMainSync(() -> monitor.removeLifecycleCallback(callback)); }
     }
 
     private EditText findEditor(View view) {

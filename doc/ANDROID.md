@@ -167,7 +167,10 @@ and build tools 36.0.0. The Gradle wrapper pins Gradle 8.13 with a SHA-256 check
 ```sh
 cd android
 ./gradlew testDebugUnitTest lintDebug assembleDebug
-./gradlew connectedDebugAndroidTest  # with a running emulator/device
+# On a dedicated test emulator: these tests use fake credentials and cached data.
+adb shell cmd connectivity airplane-mode enable
+adb shell svc wifi disable
+./gradlew connectedDebugAndroidTest
 ```
 
 The debug APK has application ID `dev.ecorp.steps.debug`, so it can coexist with the
