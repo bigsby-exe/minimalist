@@ -22,7 +22,10 @@
 *.DS_Store
 
 # Ignore public
-/public
+/public/*
+!/public/.well-known/
+/public/.well-known/*
+!/public/.well-known/assetlinks.json
 
 # Ignore node_modules
 /node_modules

@@ -30,6 +30,20 @@ class AccountAccessTest < ActionDispatch::IntegrationTest
     assert User.allowed_email?("First@EXAMPLE.com")
   end
 
+  test "Google login resumes an app handoff without granting another account access" do
+    device = users(:one).android_devices.create!(name: "Phone", token_digest: AndroidDevice.digest(SecureRandom.hex(32)))
+    token = AndroidBrowserHandoff.issue!(device, purpose: "open")
+    get phone_launch_path(token: token)
+    assert_redirected_to new_user_session_path
+    mock_google(users(:one).email)
+    get user_google_oauth2_omniauth_callback_path
+    assert_redirected_to phone_launch_path(token: token)
+    follow_redirect!
+    assert_redirected_to dashboard_path
+    follow_redirect!
+    assert_select "a", text: "Phone and widgets"
+  end
+
   test "unapproved or unverified Google emails create no accounts or identities" do
     ["stranger@example.com", nil].each do |email|
       mock_google(email)

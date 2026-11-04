@@ -10,7 +10,18 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_19_010000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_05_010000) do
+  create_table "android_browser_handoffs", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "android_device_id", null: false
+    t.string "destination", default: "/dashboard", null: false
+    t.datetime "expires_at", null: false
+    t.string "purpose", null: false
+    t.string "token_digest", limit: 64, null: false
+    t.bigint "user_id", null: false
+    t.index ["expires_at"], name: "index_android_browser_handoffs_on_expires_at"
+    t.index ["token_digest"], name: "index_android_browser_handoffs_on_token_digest", unique: true
+  end
+
   create_table "android_devices", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "name", limit: 100, null: false

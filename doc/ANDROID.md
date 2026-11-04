@@ -2,8 +2,8 @@
 
 The Android project lives in `android/` alongside its Rails backend. Steps connects
 only to `https://steps.ecorp.dev`. It requires Android 12 or newer. The dashboard
-uses the existing website in a browser-backed tab; Google authentication stays in
-the browser. The two home-screen widgets use the native `/mobile` API.
+uses the existing website full screen in a Trusted Web Activity; Google authentication stays in
+the browser. A compatible browser and successful website verification are required to hide the browser toolbar. The two home-screen widgets use the native `/mobile` API.
 
 ## Prepare the server
 
@@ -97,12 +97,12 @@ building updates.
 1. Open Steps and choose **Connect with Google**. Sign in with an approved Google
    account in the browser, compare the connection code with the app, and approve.
 2. Return to Steps. It checks for approval while open and downloads tags and starred tasks.
-3. Choose **Add Starred widget** and **Add quick-add widget**, accepting the launcher's
-   prompts. Alternatively add them through the launcher's widget picker.
+3. Long-press an empty area of the home screen, choose **Widgets**, then **Steps**,
+   and place either widget. Steps does not prompt to place widgets.
 
-The app opens the web dashboard on subsequent launches. Close the browser tab to
-return to native settings. Opening the dashboard does not share browser cookies
-with the widget API.
+The app opens the web dashboard full screen on subsequent launches. Use the avatar
+menu → **Phone and widgets** for native settings. Back from the website exits the app.
+Widget API requests continue using the separate per-device credential.
 
 The Starred widget groups tasks by tag in profile order and preserves the server's
 within-tag date ordering. Tap a name to open its location in the web Starred view;
@@ -132,13 +132,32 @@ excluded from cloud backup and device transfer. Widgets intentionally show task 
 on the home screen. Device-held secrets are not impossible to extract from a compromised
 phone, which is why each installation has independently revocable credentials.
 
-**Disconnect this phone** revokes its Rails token and clears local credentials,
-cache and drafts. If the network is unavailable, the app offers local clearing with
-an explicit reminder to revoke the phone later in web Profile. Website sign-out
-only ends the browser session. **Profile → Connected phones → Disconnect** revokes
-server access immediately; an offline phone can still display its cache until it
-next contacts the server. A Rails unauthorized response clears local account data.
-Network or proxy failures preserve the cache for retry.
+**Sign out** inside Steps asks for confirmation, revokes this phone’s credential,
+clears its local cache and drafts, and opens a single-use handoff to end the matching
+browser session. This requires a connection. Signing out in a separate desktop
+browser only ends that browser session. **Profile → Connected phones → Disconnect**
+revokes access remotely; an offline phone can display its cache until its next request.
+An unauthorized API response clears local account data. Network errors preserve drafts.
+
+## Full-screen website verification
+
+`public/.well-known/assetlinks.json` contains the production application ID and the
+public SHA-256 fingerprint of the release signing certificate. Keep this file served
+as JSON at `https://steps.ecorp.dev/.well-known/assetlinks.json` without authentication
+or a redirect. The fingerprint is public, not a signing secret. Update it when adding
+a new release signing certificate. Debug APKs are intentionally not trusted by the
+production site and display a browser toolbar. Unsupported browsers or failed
+verification also fall back to a browser tab; Google sign-in can show browser controls
+while visiting Google's domain.
+
+Android requests `POST /mobile/browser_handoff` using its device credential before
+opening the website. The five-minute, single-use URL contains a random handoff token,
+never the device bearer token. The browser must independently be signed in to the
+same approved account. The browser session then remembers the phone for its menu.
+A sign-out handoff revokes the device before returning and ends only the matching
+browser account. Do not expose handoff URLs in logs. Phone settings and sign-out use
+Android intent links; sign-out requires native confirmation so external apps cannot
+silently trigger it.
 
 ## Local builds and verification
 

@@ -1,0 +1,14 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "dev.ecorp.steps",
+      "sha256_cert_fingerprints": [
+        "4F:B3:14:08:A2:97:DF:8B:F2:94:A3:48:03:85:46:55:89:DA:2E:98:E5:A4:AE:3E:D0:7C:C9:2C:9E:88:35:A2"
+      ]
+    }
+  }
+]

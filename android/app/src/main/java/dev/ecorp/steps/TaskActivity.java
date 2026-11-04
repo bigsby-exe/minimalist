@@ -17,7 +17,7 @@ public class TaskActivity extends Activity {
         }
         long id = getIntent().getLongExtra("task_id", 0);
         if (!getIntent().getBooleanExtra("unstar", false) || id <= 0) {
-            Browser.open(this, "/dashboard?view=starred" + (id > 0 ? "#task-" + id : ""));
+            startActivity(new Intent(this, MainActivity.class).putExtra("destination", "/dashboard?view=starred" + (id > 0 ? "#task-" + id : "")));
             SyncJob.now(this);
             finish();
             return;

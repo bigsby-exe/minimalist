@@ -9,6 +9,12 @@ class ApplicationController < ActionController::Base
 
   rescue_from ActiveRecord::RecordNotFound, :with => :record_not_found
 
+  helper_method :phone_device
+
+  def phone_device
+    current_user&.android_devices&.find_by(id: session[:phone_device_id]) if session[:phone_device_id]
+  end
+
   def default_serializer_options
     {root: false}
   end
@@ -22,6 +28,9 @@ class ApplicationController < ActionController::Base
   # Devise sign in path
   # @see https://github.com/plataformatec/devise/wiki/How-To%3A-Redirect-to-a-specific-page-on-successful-sign-in-and-sign-out
   def after_sign_in_path_for(resource)
+    if token = session.delete(:phone_handoff_token)
+      return phone_launch_path(token: token)
+    end
     code = session.delete(:device_authorization_code)
     code.present? ? connect_device_path(code: code) : dashboard_path
   end

@@ -31,10 +31,12 @@ The Android app lives in `android/` and connects to `https://steps.ecorp.dev`. R
 [doc/ANDROID.md](doc/ANDROID.md) for builds, signing, approved accounts, device pairing,
 and the mobile protocol. GitHub Actions builds signed APKs through a manual workflow.
 
-The web dashboard opens in a browser-backed tab. Native widgets use `/mobile` with
+After first-time pairing, the web dashboard opens full screen in a Trusted Web Activity. The avatar menu opens native Phone and widgets settings. Users place widgets through Android’s widget picker; the app never prompts to pin them. Native widgets use `/mobile` with
 separate per-device bearer credentials. No Cloudflare Access token is required.
 Google/browser cookies and legacy user API tokens do not authenticate the mobile API.
-Profile revokes device access. Website sign-out leaves widgets connected.
+Profile revokes device access. App sign-out revokes this phone and clears its local state, then ends the matching browser session through a single-use handoff. Separate desktop browser sign-out leaves widgets connected.
+
+`AndroidBrowserHandoff` binds a device to an already authenticated, matching browser account; it never signs a user in. Handoffs expire after five minutes and are consumed under a database lock. Keep the device bearer token out of URLs. The public `.well-known/assetlinks.json` must match the production APK signing certificate; failed browser verification falls back to a browser tab.
 
 `MINIMALIST_ALLOWED_EMAILS` is a comma-separated, case-insensitive allowlist of
 verified Google email addresses. Empty means no access. Enforce it before OAuth

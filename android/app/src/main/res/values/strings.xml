@@ -8,4 +8,5 @@
     <string name="quick_add_detail">Add a task · tag · date</string>
     <string name="empty">No starred tasks</string>
     <string name="unstar">Remove star</string>
+    <string name="asset_statements" translatable="false">[{\"relation\":[\"delegate_permission/common.handle_all_urls\"],\"target\":{\"namespace\":\"web\",\"site\":\"https://steps.ecorp.dev\"}}]</string>
 </resources>

@@ -19,7 +19,12 @@
         </summary>
         <nav aria-label="Account">
           <%= link_to "Profile", profile_path %>
-          <%= button_to "Sign out", destroy_user_session_path, method: :delete %>
+          <% if phone_device %>
+            <a href="intent://phone/settings#Intent;scheme=steps;package=dev.ecorp.steps;end">Phone and widgets</a>
+            <a href="intent://phone/signout#Intent;scheme=steps;package=dev.ecorp.steps;end">Sign out</a>
+          <% else %>
+            <%= button_to "Sign out", destroy_user_session_path, method: :delete %>
+          <% end %>
         </nav>
       </details>
     <% end %>

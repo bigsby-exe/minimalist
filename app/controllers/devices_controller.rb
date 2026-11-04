@@ -28,6 +28,7 @@ class DevicesController < ApplicationController
   private
 
   def remember_connection
+    session.delete(:phone_handoff_token)
     code = params[:code].to_s
     session[:device_authorization_code] = code if !current_user && code.match?(/\A[0-9A-F]{12}\z/)
   end

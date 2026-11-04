@@ -9,7 +9,7 @@
 </section>
 <section class="profile-section">
   <h2>Connected phones</h2>
-  <p>Disconnecting a phone stops its widget access. Signing out of this website leaves phones connected.</p>
+  <p>Disconnecting a phone stops its widget access. Signing out inside the Steps app also disconnects that phone. Signing out in a separate browser leaves phones connected.</p>
   <% current_user.android_devices.order(:created_at).each do |device| %>
     <div class="task-form">
       <span><%= device.name %> · connected <%= device.created_at.to_date %></span>

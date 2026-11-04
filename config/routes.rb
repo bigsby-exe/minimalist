@@ -6,6 +6,7 @@ Lists::Application.routes.draw do
     delete "sign_out", to: "devise/sessions#destroy", as: :destroy_user_session
   end
   root "pages#home"
+  get "phone/launch", to: "phone#launch", as: :phone_launch
   get "dashboard", to: "tasks#index"
   resources :tasks, only: [:create, :update, :destroy] do
     patch :star, on: :member
@@ -15,6 +16,7 @@ Lists::Application.routes.draw do
   post "device/approve", to: "devices#approve", as: :approve_device
   resources :devices, only: :destroy
   namespace :mobile do
+    resource :browser_handoff, only: :create
     resource :authorization, only: [:create, :show]
     resource :workspace, only: :show
     resource :device, only: :destroy
