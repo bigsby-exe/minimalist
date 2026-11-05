@@ -1,7 +1,4 @@
 <section id="task-workspace" data-reset-at="<%= current_user.next_midnight.iso8601 %>" data-today="<%= @today.iso8601 %>" data-time-zone="<%= current_user.time_zone || 'Etc/UTC' %>">
-  <div class="page-heading"><div><h1><%= @starred ? "Starred" : "All tasks" %></h1></div>
-    <span class="muted"><%= @today.strftime("%A, %-d %B") %></span>
-  </div>
   <nav class="tabs" aria-label="Task views">
     <%= link_to "All tasks", dashboard_path, class: @starred ? nil : "active", 'aria-current': @starred ? nil : 'page' %>
     <%= link_to "★ Starred", dashboard_path(view: 'starred'), class: @starred ? "active" : nil, 'aria-current': @starred ? 'page' : nil %>

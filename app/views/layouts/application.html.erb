@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>minimalist</title>
+  <title>little steps</title>
   <meta name="description" content="Your tasks, organised by tag. Star what matters today.">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <%= csrf_meta_tags %>
@@ -10,7 +10,7 @@
 </head>
 <body>
   <header class="site-header">
-    <a class="brand" href="<%= user_signed_in? ? dashboard_path : root_path %>">minimalist</a>
+    <a class="brand" href="<%= user_signed_in? ? dashboard_path : root_path %>">little steps</a>
     <% if user_signed_in? %>
       <details class="account-menu">
         <summary aria-label="Account menu">

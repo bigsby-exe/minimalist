@@ -258,7 +258,6 @@ document.addEventListener("DOMContentLoaded", function () {
       var today = date.year + "-" + date.month + "-" + date.day;
       if (today !== workspace.dataset.today || now >= midnight) {
         workspace.dataset.today = today;
-        workspace.querySelector(".page-heading > .muted").textContent = new Intl.DateTimeFormat("en-GB", { timeZone: workspace.dataset.timeZone, weekday: "long", day: "numeric", month: "long" }).format(now);
         document.querySelectorAll(".task-date").forEach(function (button) {
           var due = button.dataset.dueDate;
           button.querySelector(".urgency").textContent = due < today ? "‼️" : due === today ? "❗" : "";
